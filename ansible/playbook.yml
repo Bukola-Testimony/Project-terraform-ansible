@@ -1,0 +1,87 @@
+---
+ - hosts: webserver
+   become: yes
+   tasks:
+     - name: update & upgrade servers
+       apt:
+        update_cache: yes
+        upgrade: yes
+
+#Install Apache web server
+     - name: install Apache
+       apt:
+        name: apache2
+        state: latest
+
+     - name: Start and enable Apache
+       shell: |
+          systemctl start apache2
+          systemctl enable apache2    
+      
+
+     - name: remove the default Apache document root file
+       file:
+        path: /var/www/html/index.html
+        state: absent
+
+#Set time Zone to Africa/Lagos
+     - name: Set timezone to Africa/Lagos
+       command: timedatectl set-timezone Africa/Lagos    
+
+
+# Install PHP using ppa-ondrej repo
+     - name: install php software packages
+       command: apt install lsb-release ca-certificates apt-transport-https software-properties-common -y
+
+     - name: Add repository ppa:ondrej/php
+       apt_repository:
+        repo: "ppa:ondrej/php"
+
+     - name: Updating the repo
+       apt: update_cache=yes
+
+     - name: installing php8.1
+       apt: name=php8.1 state=latest
+
+
+#Transfer php file from local to remote server 1
+ - hosts: server1
+   become: true
+   tasks:
+     - name: copy php file to remote server 1
+       tags: [ php ]
+       copy: src=/home/bukola/ansible/index.php dest=/var/www/html/ mode=0744
+
+
+
+#Transfer php file from local to remote server 2
+ - hosts: server2
+   become: true
+   tasks:
+     - name: copy php file to remote server 2
+       copy: src=/home/bukola/ansible/index1.php dest=/var/www/html/ mode=0744
+
+#Rename index.php file 
+     - name: Rename php file
+       command: mv /var/www/html/index1.php /var/www/html/index.php
+     
+        
+
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
